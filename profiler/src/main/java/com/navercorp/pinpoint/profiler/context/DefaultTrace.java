@@ -120,6 +120,10 @@ public final class DefaultTrace implements Trace {
         this.storage = storage;
     }
 
+    public Span getSpan() {
+        return this.spanRecorder.getSpan();
+    }
+
     @Override
     public SpanEventRecorder traceBlockBegin() {
         return traceBlockBegin(DEFAULT_STACKID);
@@ -197,16 +201,24 @@ public final class DefaultTrace implements Trace {
             }
             // skip
         } else {
-            Span span = spanRecorder.getSpan();
+            final Span span = spanRecorder.getSpan();
             if (span.isTimeRecording()) {
                 span.markAfterTime();
             }
             logSpan(span);
         }
 
-        if (this.storage != null) {
-            this.storage.close();
+        final Storage copyStorage = this.storage;
+        if (copyStorage != null) {
+            copyStorage.close();
             this.storage = null;
+        }
+    }
+
+    @Override
+    public void flush() {
+        if(this.storage != null) {
+            this.storage.flush();
         }
     }
 
@@ -261,8 +273,9 @@ public final class DefaultTrace implements Trace {
             final Thread th = Thread.currentThread();
             logger.trace("[DefaultTrace] Write {} thread{id={}, name={}}", spanEvent, th.getId(), th.getName());
         }
-        if(this.storage != null) {
-            this.storage.store(spanEvent);
+        final Storage storage = this.storage;
+        if (storage != null) {
+            storage.store(spanEvent);
         }
     }
 
@@ -271,8 +284,9 @@ public final class DefaultTrace implements Trace {
             final Thread th = Thread.currentThread();
             logger.trace("[DefaultTrace] Write {} thread{id={}, name={}}", span, th.getId(), th.getName());
         }
-        if(this.storage != null) {
-            this.storage.store(span);
+        final Storage storage = this.storage;
+        if (storage != null) {
+            storage.store(span);
         }
     }
 
@@ -288,6 +302,12 @@ public final class DefaultTrace implements Trace {
 
     @Override
     public AsyncTraceId getAsyncTraceId() {
+        return getAsyncTraceId(false);
+    }
+
+    @Override
+    public AsyncTraceId getAsyncTraceId(boolean closeable) {
+        // ignored closeable.
         return new DefaultAsyncTraceId(traceId, traceContext.getAsyncId(), spanRecorder.getSpan().getStartTime());
     }
 

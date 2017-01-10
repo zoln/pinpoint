@@ -177,6 +177,22 @@ public final class JavaAssistUtils {
         return jvmName.replace('/', '.');
     }
 
+    /**
+     * java/lang/String -> java.lang.String
+     * @param jvmNameArray
+     * @return
+     */
+    public static List<String> jvmNameToJavaName(String[] jvmNameArray) {
+        if (jvmNameArray == null) {
+            return Collections.emptyList();
+        }
+        List<String> list = new ArrayList<String>(jvmNameArray.length);
+        for (String jvmName : jvmNameArray) {
+            list.add(jvmNameToJavaName(jvmName));
+        }
+        return list;
+    }
+
     private static String appendJvmArray(String signature, int javaObjectArraySize) {
         if (javaObjectArraySize == 0) {
             return signature;
@@ -238,6 +254,16 @@ public final class JavaAssistUtils {
             default:
                 return javaClassName;
         }
+    }
+
+    // to variable name.
+    // '.' '$' '[' ']' => '_'
+    public static String javaClassNameToVariableName(String javaClassName) {
+        if (javaClassName == null) {
+            throw new NullPointerException("java class name must not be null");
+        }
+
+        return javaClassName.replace('.', '_').replace('$', '_').replace('[', '_').replace(']', '_');
     }
 
     private static String byteCodeSignatureToObjectType(String signature, int startIndex) {

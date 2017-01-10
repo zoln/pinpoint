@@ -34,8 +34,8 @@
                  * @param h
                  */
                 setWidthHeight = function (w, h) {
-                    if (w) element.css('width', w);
-                    if (h) element.css('height', h);
+					element.css('width', w || '100%');
+					element.css('height', h || '220px');
                 };
 
                 /**
@@ -265,9 +265,7 @@
 						}
 					} else {
 						oChart.dataProvider = data;
-						// $timeout(function () {
-							oChart.validateData();
-						// });
+						oChart.validateData();
 					}
 				};
 

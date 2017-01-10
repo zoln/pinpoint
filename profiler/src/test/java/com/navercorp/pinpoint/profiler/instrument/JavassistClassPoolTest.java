@@ -18,8 +18,9 @@ package com.navercorp.pinpoint.profiler.instrument;
 
 import com.navercorp.pinpoint.bootstrap.instrument.InstrumentClass;
 import com.navercorp.pinpoint.profiler.interceptor.registry.InterceptorRegistryBinder;
-import com.navercorp.pinpoint.test.TestInterceptorRegistryBinder;
-import com.navercorp.pinpoint.test.util.BytecodeUtils;
+
+import com.navercorp.pinpoint.profiler.util.BytecodeUtils;
+import com.navercorp.pinpoint.profiler.util.TestInterceptorRegistryBinder;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -45,7 +46,7 @@ public class JavassistClassPoolTest {
 
 
         final byte[] originalByteCode = BytecodeUtils.getClassFile(null, mock);
-        final InstrumentClass transformClass = pool.getClass(null, mock, originalByteCode);
+        final InstrumentClass transformClass = pool.getClass(null, null, mock, originalByteCode);
 
         Assert.assertNotNull(transformClass.getDeclaredMethod("test"));
         Assert.assertNull("transform method", transformClass.getDeclaredMethod("transformMethod"));
@@ -59,7 +60,7 @@ public class JavassistClassPoolTest {
 
 
         final byte[] transformByteCode = getTransformByteCode();
-        final InstrumentClass transformClass = pool.getClass(null, mock, transformByteCode);
+        final InstrumentClass transformClass = pool.getClass(null, null, mock, transformByteCode);
 
         Assert.assertNotNull(transformClass.getDeclaredMethod("test"));
         Assert.assertNotNull("transform method", transformClass.getDeclaredMethod("transformMethod"));

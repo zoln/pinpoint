@@ -1,7 +1,7 @@
 (function() {
     'use strict';
-    angular.module( "pinpointApp" ).directive( "activeTraceChartDirective", [ "$timeout",
-        function ( $timeout ) {
+    angular.module( "pinpointApp" ).directive( "activeTraceChartDirective", [
+        function () {
             return {
                 template: '<div></div>',
                 replace: true,
@@ -12,34 +12,28 @@
                 link: function postLink(scope, element, attrs) {
 
                     // define variables
-                    var sId, oChart;
+                    var sId = "", oChart;
 
-                    // define variables of methods
-                    var setIdAutomatically, setWidthHeight, render, showCursorAt, resize;
-
-                    /**
-                     * set id automatically
-                     */
-                    setIdAutomatically = function () {
+                    function setIdAutomatically() {
                         sId = 'multipleValueAxesId-' + scope.namespace;
                         element.attr('id', sId);
-                    };
+                    }
 
-                    /**
-                     * set width height
-                     * @param w
-                     * @param h
-                     */
-                    setWidthHeight = function (w, h) {
+					function hasId() {
+						return sId === "" ? false : true;
+					}
+
+                    function setWidthHeight(w, h) {
                         if (w) element.css('width', w);
                         if (h) element.css('height', h);
-                    };
+                    }
 
-                    /**
-                     * render
-                     * @param chartData
-                     */
-                    render = function (chartData) {
+					function renderUpdate(data) {
+						oChart.dataProvider = data;
+						oChart.validateData();
+					}
+
+                    function render(chartData) {
                         var options = {
                             "type": "serial",
                             "theme": "light",
@@ -63,7 +57,7 @@
                                     "gridAlpha": 0,
                                     "axisAlpha": 1,
                                     "position": "left",
-                                    "title": "Active Trace",
+                                    "title": "Active Thread",
                                     "minimum" : 0
                                 }
                             ],
@@ -71,8 +65,8 @@
                                 {
                                     "balloonText": "[[description]] : [[value]]",
                                     "legendValueText": "([[description]]) [[value]]",
-                                    "lineColor": "rgb(214, 141, 8)",
-                                    "fillColor": "rgb(214, 141, 8)",
+                                    "lineColor": "rgb(44, 160, 44)",
+                                    "fillColor": "rgb(44, 160, 44)",
                                     "title": "Fast",
 									"descriptionField": "fastTitle",
                                     "valueField": "fast",
@@ -81,8 +75,8 @@
                                 },{
                                     "balloonText": "[[description]] : [[value]]",
                                     "legendValueText": "([[description]]) [[value]]",
-                                    "lineColor": "rgb(252, 178, 65)",
-                                    "fillColor": "rgb(252, 178, 65)",
+                                    "lineColor": "rgb(60, 129, 250)",
+                                    "fillColor": "rgb(60, 129, 250)",
                                     "title": "Normal",
 									"descriptionField": "normalTitle",
                                     "valueField": "normal",
@@ -91,8 +85,8 @@
                                 },{
                                     "balloonText": "[[description]] : [[value]]",
                                     "legendValueText": "([[description]]) [[value]]",
-                                    "lineColor": "rgb(90, 103, 166)",
-                                    "fillColor": "rgb(90, 103, 166)",
+                                    "lineColor": "rgb(248, 199, 49)",
+                                    "fillColor": "rgb(248, 199, 49)",
                                     "title": "Slow",
 									"descriptionField": "slowTitle",
                                     "valueField": "slow",
@@ -101,8 +95,8 @@
                                 },{
                                     "balloonText": "[[description]] : [[value]]",
                                     "legendValueText": "([[description]]) [[value]]",
-                                    "lineColor": "rgb(160, 153, 255)",
-                                    "fillColor": "rgb(160, 153, 255)",
+                                    "lineColor": "rgb(246, 145, 36)",
+                                    "fillColor": "rgb(246, 145, 36)",
                                     "title": "Very Slow",
 									"descriptionField": "verySlowTitle",
                                     "valueField": "verySlow",
@@ -110,11 +104,6 @@
                                     "connect": true
                                 }
                             ],
-                            "chartCursor": {
-                                "categoryBalloonAlpha": 0.7,
-                                "fullWidth": true,
-                                "cursorAlpha": 0.1
-                            },
                             "categoryField": "time",
                             "categoryAxis": {
                                 "axisColor": "#DADADA",
@@ -125,19 +114,19 @@
                                 }
                             }
                         };
-                        $timeout(function () {
-                            oChart = AmCharts.makeChart(sId, options);
-                            oChart.chartCursor.addListener( "changed", function (event) {
-                                scope.$emit( "activeTraceChartDirective.cursorChanged." + scope.namespace, event);
-                            });
-                        });
-                    };
+						oChart = AmCharts.makeChart(sId, options);
+						var oChartCursor = new AmCharts.ChartCursor({
+							"categoryBalloonAlpha": 0.7,
+							"fullWidth": true,
+							"cursorAlpha": 0.1
+						});
+						oChartCursor.addListener("changed", function (event) {
+							scope.$emit("activeTraceChartDirective.cursorChanged." + scope.namespace, event);
+						});
+						oChart.addChartCursor( oChartCursor );
+                    }
 
-                    /**
-                     * show cursor at
-                     * @param category
-                     */
-                    showCursorAt = function (category) {
+                   function showCursorAt(category) {
                         if (category) {
                             if (angular.isNumber(category)) {
                                 category = oChart.dataProvider[category].time;
@@ -146,22 +135,23 @@
                         } else {
                             oChart.chartCursor.hideCursor();
                         }
-                    };
+                    }
 
-                    /**
-                     * resize
-                     */
-                    resize = function () {
+                    function resize() {
                         if (oChart) {
                             oChart.validateNow();
                             oChart.validateSize();
                         }
-                    };
+                    }
 
                     scope.$on( "activeTraceChartDirective.initAndRenderWithData." + scope.namespace, function (event, data, w, h) {
-                        setIdAutomatically();
-                        setWidthHeight(w, h);
-                        render( data );
+						if ( hasId() ) {
+							renderUpdate( data );
+						} else {
+							setIdAutomatically();
+							setWidthHeight(w, h);
+							render(data);
+						}
                     });
 
                     scope.$on( "activeTraceChartDirective.showCursorAt." + scope.namespace, function (event, category) {
